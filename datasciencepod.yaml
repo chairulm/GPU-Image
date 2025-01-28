@@ -1,9 +1,10 @@
+# PVC to limit Volume to 100G
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: datascience-pvc
   labels:
-    app: datascience-1  # Fixed typo in the label name
+    app: datascience-1  
 spec:
   accessModes:
     - ReadWriteOnce
@@ -11,33 +12,34 @@ spec:
     requests:
       storage: 100Gi
 ---
+# Stateful Set with datascience image and CPU-Memory and GPU Limit
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: datascience-1
 spec:
-  serviceName: "datascience-1"  # Fixed typo in service name
+  serviceName: "datascience-1"  
   replicas: 1
   selector:
     matchLabels:
-      app: datascience-1  # Fixed typo in label name
+      app: datascience-1
   template:
     metadata:
       labels:
-        app: datascience-1  # Fixed typo in label name
+        app: datascience-1
     spec:
       restartPolicy: Always
       containers:
-        - name: datascience-1  # Fixed typo in container name
+        - name: datascience-1
           image: chairulfm/custom-gpu-jupyter:latest
           securityContext:
             runAsUser: 0  # Run as root
           resources:
             requests:
-              memory: "24Gi"  # Use "Gi" for consistency with Kubernetes
+              memory: "24Gi" 
               cpu: "6"
             limits:
-              memory: "24Gi"  # Use "Gi" for consistency with Kubernetes
+              memory: "24Gi" 
               cpu: "6"
               nvidia.com/gpu: 1  # Allocate one GPU
           volumeMounts:
@@ -71,7 +73,7 @@ metadata:
     app: datascience-1  # Match the StatefulSet's app label
 spec:
   selector:
-    app: datascience-1  # Match the StatefulSet's app label
+    app: datascience-1
   ports:
     - name: jupyter
       protocol: TCP
