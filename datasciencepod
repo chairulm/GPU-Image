@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: datascience-pvc
+  labels:
+    app: datascience-1  # Fixed typo in the label name
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: datascience-1
+spec:
+  serviceName: "datascience-1"  # Fixed typo in service name
+  replicas: 1
+  selector:
+    matchLabels:
+      app: datascience-1  # Fixed typo in label name
+  template:
+    metadata:
+      labels:
+        app: datascience-1  # Fixed typo in label name
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: datascience-1  # Fixed typo in container name
+          image: chairulfm/custom-gpu-jupyter:latest
+          securityContext:
+            runAsUser: 0  # Run as root
+          resources:
+            requests:
+              memory: "24Gi"  # Use "Gi" for consistency with Kubernetes
+              cpu: "6"
+            limits:
+              memory: "24Gi"  # Use "Gi" for consistency with Kubernetes
+              cpu: "6"
+              nvidia.com/gpu: 1  # Allocate one GPU
+          volumeMounts:
+            - name: work-volume
+              mountPath: /home/jovyan/work
+          env:
+            - name: GRANT_SUDO
+              value: "yes"
+            - name: JUPYTER_ENABLE_LAB
+              value: "yes"
+            - name: NAME
+              value: "datascience-1"
+            - name: TZ
+              value: "Asia/Jakarta"
+            - name: USER_LOCALES
+              value: "en_US.UTF-8 UTF-8"
+          ports:
+            - containerPort: 8888
+            - containerPort: 22
+      volumes:
+        - name: work-volume
+          hostPath:
+            path: /home/ubuntu/dts-user  # Ensure this path exists on the host
+            type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: datascience-inbound-service
+  labels:
+    app: datascience-1  # Match the StatefulSet's app label
+spec:
+  selector:
+    app: datascience-1  # Match the StatefulSet's app label
+  ports:
+    - name: jupyter
+      protocol: TCP
+      port: 8888  # Expose Jupyter
+      targetPort: 8888
+      nodePort: 30888  # Optional: NodePort for external access
+    - name: ssh
+      protocol: TCP
+      port: 22  # Expose SSH
+      targetPort: 22
+      nodePort: 30222  # Optional: NodePort for external access
+  type: NodePort  # Change to LoadBalancer if using a cloud provider
