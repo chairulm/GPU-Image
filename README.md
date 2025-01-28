@@ -14,3 +14,6 @@ docker build -t chairulfm/custom-gpu-jupyter:v1.0 .
 docker tag chairulfm/custom-gpu-jupyter:v1.0 chairulfm/custom-gpu-jupyter:latest
 docker push chairulfm/custom-gpu-jupyter:v1.0
 docker push chairulfm/custom-gpu-jupyter:latest
+
+apply to kubernetes cluster
+kubectl delete -f dpod.yaml
